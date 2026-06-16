@@ -1,0 +1,287 @@
+.dormitory-page {
+  min-height: 100vh;
+  background: var(--gradient-page);
+  color: var(--color-text);
+}
+
+.dormitory-shell {
+  width: min(1180px, calc(100vw - 48px));
+  margin: 0 auto;
+}
+
+.dormitory-hero {
+  padding: 40px 0 28px;
+}
+
+.hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 0.95fr);
+  gap: 28px;
+  align-items: center;
+}
+
+.hero-copy,
+.info-card,
+.stat-card,
+.amenity-card,
+.closing-panel {
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: var(--color-surface);
+  box-shadow: 0 18px 38px var(--color-shadow);
+}
+
+.hero-copy {
+  padding: 36px;
+}
+
+.hero-kicker,
+.section-kicker {
+  margin-bottom: 10px;
+  color: var(--color-primary-strong);
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hero-copy h1,
+.section-head h2,
+.showcase-copy h2,
+.closing-panel h2 {
+  color: #2d2732;
+  font-family: var(--font-serif);
+  line-height: 1.14;
+}
+
+.hero-copy h1 {
+  margin-bottom: 16px;
+  font-size: clamp(2.4rem, 4vw, 4.3rem);
+}
+
+.hero-copy p,
+.info-card p,
+.amenity-card p,
+.closing-panel p {
+  color: rgba(43, 36, 48, 0.7);
+  font-size: 1rem;
+  line-height: 1.85;
+}
+
+.hero-meta {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.hero-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-soft);
+  font-weight: 600;
+}
+
+.hero-visual {
+  overflow: hidden;
+  min-height: 560px;
+  border-radius: 28px;
+  box-shadow: 0 24px 50px var(--color-shadow-strong);
+}
+
+.hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dormitory-section {
+  padding: 32px 0;
+}
+
+.dormitory-section-soft {
+  background: rgba(var(--color-primary-rgb), 0.08);
+}
+
+.section-head {
+  max-width: 820px;
+  margin-bottom: 24px;
+}
+
+.section-head h2,
+.showcase-copy h2,
+.closing-panel h2 {
+  font-size: clamp(2rem, 3vw, 3rem);
+}
+
+.content-grid,
+.amenity-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.content-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.info-card {
+  padding: 28px;
+}
+
+.info-card h3,
+.amenity-card h3 {
+  margin-bottom: 12px;
+  color: #2d2732;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.stat-card {
+  padding: 28px 18px;
+  text-align: center;
+}
+
+.stat-value {
+  margin-bottom: 8px;
+  color: var(--color-primary-strong);
+  font-size: 2.4rem;
+  font-weight: 800;
+}
+
+.stat-label {
+  color: rgba(43, 36, 48, 0.64);
+  font-weight: 700;
+}
+
+.showcase-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
+  gap: 24px;
+  align-items: center;
+}
+
+.feature-list {
+  display: grid;
+  gap: 14px;
+  margin: 22px 0 0;
+  padding-left: 20px;
+  color: #5c4f69;
+  line-height: 1.8;
+  font-weight: 600;
+}
+
+.showcase-gallery {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 16px;
+}
+
+.gallery-main,
+.gallery-side-image {
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 24px;
+  box-shadow: 0 16px 34px var(--color-shadow);
+}
+
+.gallery-main {
+  height: 520px;
+}
+
+.gallery-side {
+  display: grid;
+  gap: 16px;
+}
+
+.gallery-side-image {
+  height: 252px;
+}
+
+.amenity-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.amenity-card {
+  padding: 24px;
+}
+
+.amenity-icon {
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+  border-radius: 18px;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary-strong);
+}
+
+.closing-panel {
+  padding: 34px;
+}
+
+.closing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+@media (max-width: 1080px) {
+  .hero-layout,
+  .content-grid,
+  .showcase-layout,
+  .amenity-grid,
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .showcase-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-side {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-visual {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 720px) {
+  .dormitory-shell {
+    width: min(100vw - 28px, 1180px);
+  }
+
+  .hero-copy,
+  .info-card,
+  .amenity-card,
+  .closing-panel {
+    padding: 24px;
+  }
+
+  .gallery-main {
+    height: 320px;
+  }
+
+  .gallery-side {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-side-image {
+    height: 220px;
+  }
+
+  .closing-actions :deep(.v-btn) {
+    width: 100%;
+  }
+}

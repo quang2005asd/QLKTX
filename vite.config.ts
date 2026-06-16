@@ -11,12 +11,18 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@room': fileURLToPath(new URL('./src/modules/room', import.meta.url)),
-      '@contract': fileURLToPath(new URL('./src/modules/contract', import.meta.url)),
-      '@billing': fileURLToPath(new URL('./src/modules/billing', import.meta.url)),
+      '@core': fileURLToPath(new URL('./src/core', import.meta.url)),
+      '@room-building': fileURLToPath(new URL('./src/modules/room-building', import.meta.url)),
+      '@student-contract': fileURLToPath(new URL('./src/modules/student-contract', import.meta.url)),
+      '@billing-maintenance': fileURLToPath(new URL('./src/modules/billing-maintenance', import.meta.url)),
     },
   },
   server: {
+    host: '0.0.0.0',
     port: 3000,
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 4173,
   },
 })

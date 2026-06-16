@@ -17,9 +17,10 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@room/*": ["./src/modules/room/*"],
-      "@contract/*": ["./src/modules/contract/*"],
-      "@billing/*": ["./src/modules/billing/*"]
+      "@core/*": ["./src/core/*"],
+      "@room-building/*": ["./src/modules/room-building/*"],
+      "@student-contract/*": ["./src/modules/student-contract/*"],
+      "@billing-maintenance/*": ["./src/modules/billing-maintenance/*"]
     },
     "baseUrl": ".",
     "types": ["vite/client", "node"]

@@ -1,31 +1,54 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/shared/stores/authStore'
-import { roomRoutes } from '@/modules/room/routes'
-import { contractRoutes } from '@/modules/contract/routes'
-import { billingRoutes } from '@/modules/billing/routes'
+import { useAuthStore } from '@/core/stores/authStore'
+import { roomBuildingRoutes } from '@/modules/room-building/routes'
+import { studentContractRoutes } from '@/modules/student-contract/routes'
+import { billingMaintenanceRoutes } from '@/modules/billing-maintenance/routes'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/login',
-      component: () => import('@billing/views/LoginView.vue'),
+      path: '/',
+      name: 'intro',
+      component: () => import('@/core/views/IntroView.vue'),
       meta: { public: true },
     },
-    { path: '/', redirect: '/dashboard' },
     {
-      path: '/',
-      component: () => import('@/shared/components/AppShell.vue'),
+      path: '/gioi-thieu-ktx-dai-nam',
+      name: 'dormitory-intro',
+      component: () => import('@/core/views/DormitoryIntroView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('@/core/views/LoginView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: () => import('@/core/views/RegisterView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/app',
+      component: () => import('@/core/layouts/AppShell.vue'),
       meta: { requiresAuth: true },
       children: [
-        ...roomRoutes,
-        ...contractRoutes,
-        ...billingRoutes,
+        {
+          path: 'overview',
+          name: 'overview',
+          component: () => import('@/core/views/OverviewView.vue'),
+        },
+        ...roomBuildingRoutes,
+        ...studentContractRoutes,
+        ...billingMaintenanceRoutes,
       ],
     },
     {
       path: '/:pathMatch(.*)*',
-      component: () => import('@/shared/views/NotFoundView.vue'),
+      component: () => import('@/core/views/NotFoundView.vue'),
     },
   ],
 })
@@ -33,18 +56,12 @@ const router = createRouter({
 router.beforeEach((to) => {
   const auth = useAuthStore()
 
-  // Chưa đăng nhập → về trang login
-  if (!to.meta.public && !auth.isLoggedIn) return '/login'
+  if (!to.meta.public && !auth.isLoggedIn) {
+    return '/login'
+  }
 
-  // Đã đăng nhập → kiểm tra role
-  if (auth.isLoggedIn && to.meta.roles) {
-    const allowedRoles = to.meta.roles as string[]
-    const userRole = auth.user?.role
-    if (userRole && !allowedRoles.includes(userRole)) {
-      // MANAGER và ADMIN về dashboard, STUDENT về trang phòng
-      if (auth.isStudent) return '/room/browse'
-      return '/dashboard'
-    }
+  if (auth.isLoggedIn && (to.name === 'login' || to.name === 'register')) {
+    return '/app/overview'
   }
 })
 

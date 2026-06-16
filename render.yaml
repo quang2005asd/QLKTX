@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: qly-ktx-frontend
+    runtime: static
+    rootDir: .
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: true
+    envVars:
+      - key: VITE_ROOM_BUILDING_API_URL
+        sync: false
+      - key: VITE_STUDENT_CONTRACT_API_URL
+        sync: false
+      - key: VITE_BILLING_MAINTENANCE_API_URL
+        sync: false

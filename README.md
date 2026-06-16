@@ -297,3 +297,34 @@ Khong can doi het trong 1 lan. Co the chuyen tung module de tranh vo import va r
 - `backend service` = viet rieng o project khac
 
 Neu can mo rong sau nay, chi can them API va view trong module tuong ung, khong can tron logic backend vao frontend.
+
+## 13. Deploy frontend len Render
+
+`Qly_ktx` co the deploy rieng len Render duoi dang `Static Site`.
+
+### Cach nhanh trong dashboard
+
+1. Push repo `Qly_ktx` len GitHub.
+2. Vao Render -> `New` -> `Static Site`.
+3. Chon repo `Qly_ktx`.
+4. Dat:
+
+```text
+Build Command: npm install && npm run build
+Publish Directory: dist
+```
+
+5. Them cac environment variable:
+
+```text
+VITE_ROOM_BUILDING_API_URL=https://your-room-building-api
+VITE_STUDENT_CONTRACT_API_URL=https://your-student-contract-api
+VITE_BILLING_MAINTENANCE_API_URL=https://your-billing-api
+```
+
+### File da chuan bi san cho Render
+
+- `render.yaml`: cau hinh service static
+- `public/_redirects`: rewrite tat ca route ve `index.html`
+
+File `_redirects` la bat buoc khi frontend dung `createWebHistory()` trong Vue Router, neu khong refresh o route con se bi `404`.

@@ -635,6 +635,20 @@
   transform: scale(1.05);
 }
 
+.room-grid-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin: -8px 0 18px;
+}
+
+.room-grid-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .room-body {
   padding: 20px;
 }
@@ -1000,7 +1014,8 @@
   }
 
   .status-strip,
-  .cta-panel {
+  .cta-panel,
+  .room-grid-toolbar {
     flex-direction: column;
     align-items: flex-start;
   }

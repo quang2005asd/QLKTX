@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { resolveServiceBaseUrl } from '@/core/api/serviceBaseUrl'
+
 const branding = {
   schoolName: 'Đại Nam',
   logoUrl: 'https://www.senviet.art/wp-content/uploads/edd/2021/12/dainam.jpg',
@@ -18,11 +20,11 @@ const mediaLinks = {
   studyImage:
     'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80',
   roomStandard:
-    'https://cdnphoto.dantri.com.vn/sTA_ap8QAsHPx9mArO5kq7fmej8=/thumb_w/1360/2025/07/11/0j7a6558jpg-1752249598664.jpg',
+    'https://cdn.lozido.com/image/news/64565b3e9bb11-1683381054-ky-tuc-xa-tu-nhanjpg.jpg',
   roomVip:
-    'https://cdnphoto.dantri.com.vn/wtOE6G31drEBvVUFDc1uwtp2Dq0=/thumb_w/1360/2025/07/11/untitled-1-18jpg-1752249598430.jpg',
+    'https://tse2.mm.bing.net/th/id/OIP.mGlakF37fxA-k0hKoz83NQHaEn?rs=1&pid=ImgDetMain&o=7&rm=3',
   roomBunk:
-    'https://cdnphoto.dantri.com.vn/BzwZLYSdMylUazEHJW-sLeOXc4c=/thumb_w/1360/2025/07/11/0j7a6583jpg-1752249598639.jpg',
+    'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80&sat=-30',
   experienceMain:
     'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80',
   experienceTop:
@@ -31,10 +33,163 @@ const mediaLinks = {
     'https://images.unsplash.com/photo-1486946255434-2466348c2166?auto=format&fit=crop&w=900&q=80',
 }
 
+type IntroRoomCard = {
+  id: string
+  badge: string
+  title: string
+  description: string
+  capacity: string
+  price: string
+  imageUrl: string
+}
+
+type IntroRoomTypeApi = {
+  id: string
+  imageUrl?: string | null
+  typeName: string
+  capacity: number
+  basePrice: number
+  description?: string | null
+}
+
+const roomApiBaseUrl = resolveServiceBaseUrl(import.meta.env.VITE_ROOM_BUILDING_API_URL, 5285)
+
+const fallbackRoomCards: IntroRoomCard[] = [
+  {
+    id: 'fallback-standard',
+    badge: 'Tiêu chuẩn',
+    title: 'Standard',
+    description: 'Phòng 4 người, đầy đủ tiện nghi cơ bản, phù hợp cho sinh viên năm nhất.',
+    capacity: '4 người',
+    price: '1.200.000đ/tháng',
+    imageUrl: mediaLinks.roomStandard,
+  },
+  {
+    id: 'fallback-vip',
+    badge: 'Cao cấp',
+    title: 'VIP',
+    description: 'Phòng 2 người, không gian rộng hơn, phù hợp cho nhu cầu ở ổn định dài hạn.',
+    capacity: '2 người',
+    price: '1.800.000đ/tháng',
+    imageUrl: mediaLinks.roomVip,
+  },
+  {
+    id: 'fallback-bunk',
+    badge: 'Tiết kiệm',
+    title: 'Giường tầng',
+    description: 'Tối ưu diện tích, chi phí hợp lý, phù hợp cho sinh viên ưu tiên ngân sách.',
+    capacity: '6 người',
+    price: '950.000đ/tháng',
+    imageUrl: mediaLinks.roomBunk,
+  },
+]
+
+const roomShowcaseCards = ref<IntroRoomCard[]>([])
+const currentRoomPage = ref(0)
+const roomCardsPerView = ref(3)
+
 let revealObserver: IntersectionObserver | null = null
 
+function handleImageError(event: Event) {
+  const image = event.target as HTMLImageElement | null
+  const fallback = image?.dataset.fallback
+
+  if (!image || !fallback || image.src === fallback) return
+  image.src = fallback
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+function getRoomBadgeByCapacity(capacity: number) {
+  if (capacity <= 2) return 'Cao cấp'
+  if (capacity >= 6) return 'Tiết kiệm'
+  return 'Tiêu chuẩn'
+}
+
+function getFallbackRoomImage(index: number) {
+  const images = [mediaLinks.roomStandard, mediaLinks.roomVip, mediaLinks.roomBunk]
+  return images[index % images.length]
+}
+
+async function loadRoomShowcase() {
+  try {
+    const response = await fetch(`${roomApiBaseUrl}/api/roomtypes`)
+    if (!response.ok) throw new Error('Không tải được danh sách loại phòng')
+
+    const roomTypes = (await response.json()) as IntroRoomTypeApi[]
+    const cards = roomTypes
+      .slice(0, 3)
+      .map((roomType, index) => ({
+        id: roomType.id,
+        badge: getRoomBadgeByCapacity(roomType.capacity ?? 4),
+        title: roomType.typeName ?? `Loại phòng ${index + 1}`,
+        description:
+          roomType.description?.trim() ||
+          'Không gian nội trú hiện đại, phù hợp cho sinh viên đăng ký lưu trú dài hạn.',
+        capacity: `${roomType.capacity ?? 0} người`,
+        price: formatCurrency(roomType.basePrice ?? 0) + '/tháng',
+        imageUrl: roomType.imageUrl || getFallbackRoomImage(index),
+      }))
+
+    roomShowcaseCards.value = cards.length > 0 ? cards : fallbackRoomCards
+  } catch {
+    roomShowcaseCards.value = fallbackRoomCards
+  }
+
+  await nextTick()
+  observeRevealTargets()
+}
+
+const displayedRoomCards = computed(() => roomShowcaseCards.value.length > 0 ? roomShowcaseCards.value : fallbackRoomCards)
+const roomPageCount = computed(() => Math.max(1, Math.ceil(displayedRoomCards.value.length / roomCardsPerView.value)))
+const visibleRoomCards = computed(() => {
+  const start = currentRoomPage.value * roomCardsPerView.value
+  return displayedRoomCards.value.slice(start, start + roomCardsPerView.value)
+})
+
+function observeRevealTargets() {
+  if (!revealObserver) return
+  const revealTargets = document.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-visible)')
+  revealTargets.forEach((target) => revealObserver?.observe(target))
+}
+
+function updateRoomCardsPerView() {
+  if (window.innerWidth <= 720) {
+    roomCardsPerView.value = 1
+    return
+  }
+
+  if (window.innerWidth <= 1080) {
+    roomCardsPerView.value = 2
+    return
+  }
+
+  roomCardsPerView.value = 3
+}
+
+function showPreviousRoomPage() {
+  currentRoomPage.value = currentRoomPage.value <= 0 ? roomPageCount.value - 1 : currentRoomPage.value - 1
+}
+
+function showNextRoomPage() {
+  currentRoomPage.value = currentRoomPage.value >= roomPageCount.value - 1 ? 0 : currentRoomPage.value + 1
+}
+
+watch([displayedRoomCards, roomCardsPerView], () => {
+  if (currentRoomPage.value > roomPageCount.value - 1) {
+    currentRoomPage.value = Math.max(0, roomPageCount.value - 1)
+  }
+})
+
 onMounted(() => {
-  const revealTargets = document.querySelectorAll<HTMLElement>('[data-reveal]')
+  updateRoomCardsPerView()
+  window.addEventListener('resize', updateRoomCardsPerView)
 
   revealObserver = new IntersectionObserver(
     (entries) => {
@@ -51,10 +206,12 @@ onMounted(() => {
     },
   )
 
-  revealTargets.forEach((target) => revealObserver?.observe(target))
+  observeRevealTargets()
+  loadRoomShowcase()
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateRoomCardsPerView)
   revealObserver?.disconnect()
   revealObserver = null
 })
@@ -66,7 +223,7 @@ onBeforeUnmount(() => {
       <header class="showcase-header">
         <div class="showcase-shell header-inner">
           <div class="brand-wrap">
-            <img :src="branding.logoUrl" alt="Logo trường" class="brand-logo" />
+            <img :src="branding.logoUrl" alt="Logo trường" class="brand-logo" :data-fallback="mediaLinks.campusImage" @error="handleImageError" />
             <div class="brand-name">{{ branding.schoolName }}</div>
           </div>
 
@@ -171,7 +328,7 @@ onBeforeUnmount(() => {
           <div class="section-title" data-reveal>Không gian nổi bật</div>
           <div class="gallery-grid">
             <article class="gallery-card" data-reveal>
-              <img :src="mediaLinks.campusImage" alt="Khu nhà ở sinh viên" class="gallery-photo" />
+              <img :src="mediaLinks.campusImage" alt="Khu nhà ở sinh viên" class="gallery-photo" :data-fallback="mediaLinks.roomImage" @error="handleImageError" />
               <div class="gallery-content">
                 <div class="gallery-kicker">Không gian nổi bật</div>
                 <h3>Khu nhà ở sinh viên khang trang</h3>
@@ -180,7 +337,7 @@ onBeforeUnmount(() => {
             </article>
 
             <article class="gallery-card reveal-delay-1" data-reveal>
-              <img :src="mediaLinks.roomImage" alt="Phòng tiêu chuẩn" class="gallery-photo" />
+              <img :src="mediaLinks.roomImage" alt="Phòng tiêu chuẩn" class="gallery-photo" :data-fallback="mediaLinks.studyImage" @error="handleImageError" />
               <div class="gallery-content">
                 <div class="gallery-kicker">Phòng ở</div>
                 <h3>Phòng tiêu chuẩn</h3>
@@ -189,7 +346,7 @@ onBeforeUnmount(() => {
             </article>
 
             <article class="gallery-card reveal-delay-2" data-reveal>
-              <img :src="mediaLinks.studyImage" alt="Khu học tập" class="gallery-photo" />
+              <img :src="mediaLinks.studyImage" alt="Khu học tập" class="gallery-photo" :data-fallback="mediaLinks.roomImage" @error="handleImageError" />
               <div class="gallery-content">
                 <div class="gallery-kicker">Học tập</div>
                 <h3>Khu tự học yên tĩnh</h3>
@@ -309,48 +466,37 @@ onBeforeUnmount(() => {
         <div class="showcase-shell">
           <div class="section-title" data-reveal>Khám phá loại phòng</div>
 
+          <div class="room-grid-toolbar" data-reveal>
+            <div class="room-grid-controls">
+              <v-btn
+                icon="mdi-chevron-left"
+                variant="tonal"
+                color="primary"
+                rounded="circle"
+                @click="showPreviousRoomPage"
+              />
+              <v-btn
+                icon="mdi-chevron-right"
+                variant="tonal"
+                color="primary"
+                rounded="circle"
+                @click="showNextRoomPage"
+              />
+            </div>
+          </div>
+
           <div class="room-grid">
-            <article class="room-card" data-reveal>
+            <article v-for="(roomCard, index) in visibleRoomCards" :key="`${roomCard.id}-${currentRoomPage}`" class="room-card" :class="index > 0 ? `reveal-delay-${index}` : ''" data-reveal>
               <div class="room-thumb">
-                <img :src="mediaLinks.roomStandard" alt="Phòng tiêu chuẩn" class="room-thumb-image" />
-                <div class="room-thumb-badge">Tiêu chuẩn</div>
+                <img :src="roomCard.imageUrl" :alt="roomCard.title" class="room-thumb-image" :data-fallback="mediaLinks.roomImage" @error="handleImageError" />
+                <div class="room-thumb-badge">{{ roomCard.badge }}</div>
               </div>
               <div class="room-body">
-                <h3>Standard</h3>
-                <p>Phòng 4 người, đầy đủ tiện nghi cơ bản, phù hợp cho sinh viên năm nhất.</p>
+                <h3>{{ roomCard.title }}</h3>
+                <p>{{ roomCard.description }}</p>
                 <div class="room-meta">
-                  <span>4 người</span>
-                  <span>1.200.000đ/tháng</span>
-                </div>
-              </div>
-            </article>
-
-            <article class="room-card reveal-delay-1" data-reveal>
-              <div class="room-thumb">
-                <img :src="mediaLinks.roomVip" alt="Phòng VIP" class="room-thumb-image" />
-                <div class="room-thumb-badge">Cao cấp</div>
-              </div>
-              <div class="room-body">
-                <h3>VIP</h3>
-                <p>Phòng 2 người, không gian rộng hơn, phù hợp cho nhu cầu ở ổn định dài hạn.</p>
-                <div class="room-meta">
-                  <span>2 người</span>
-                  <span>1.800.000đ/tháng</span>
-                </div>
-              </div>
-            </article>
-
-            <article class="room-card reveal-delay-2" data-reveal>
-              <div class="room-thumb">
-                <img :src="mediaLinks.roomBunk" alt="Phòng giường tầng" class="room-thumb-image" />
-                <div class="room-thumb-badge">Tiết kiệm</div>
-              </div>
-              <div class="room-body">
-                <h3>Giường tầng</h3>
-                <p>Tối ưu diện tích, chi phí hợp lý, phù hợp cho sinh viên ưu tiên ngân sách.</p>
-                <div class="room-meta">
-                  <span>6 người</span>
-                  <span>950.000đ/tháng</span>
+                  <span>{{ roomCard.capacity }}</span>
+                  <span>{{ roomCard.price }}</span>
                 </div>
               </div>
             </article>
@@ -385,12 +531,12 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="experience-visual-card reveal-delay-1" data-reveal>
-            <img :src="mediaLinks.experienceMain" alt="Không gian nội trú" class="experience-photo-main" />
+            <img :src="mediaLinks.experienceMain" alt="Không gian nội trú" class="experience-photo-main" :data-fallback="mediaLinks.roomImage" @error="handleImageError" />
             <div class="experience-overlay-card experience-overlay-top">
-              <img :src="mediaLinks.experienceTop" alt="Không gian sinh hoạt" class="experience-overlay-photo" />
+              <img :src="mediaLinks.experienceTop" alt="Không gian sinh hoạt" class="experience-overlay-photo" :data-fallback="mediaLinks.roomImage" @error="handleImageError" />
             </div>
             <div class="experience-overlay-card experience-overlay-bottom">
-              <img :src="mediaLinks.experienceBottom" alt="Không gian học tập" class="experience-overlay-photo" />
+              <img :src="mediaLinks.experienceBottom" alt="Không gian học tập" class="experience-overlay-photo" :data-fallback="mediaLinks.studyImage" @error="handleImageError" />
             </div>
           </div>
         </div>

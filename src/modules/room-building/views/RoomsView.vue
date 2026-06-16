@@ -173,6 +173,8 @@ onMounted(moduleState.ensureLoaded)
           <v-select v-model="moduleState.roomForm.roomTypeId" :items="moduleState.roomTypeOptions" item-title="title" item-value="value" label="Loại phòng" variant="outlined" />
           <v-text-field v-model="moduleState.roomForm.roomNumber" label="Số phòng" variant="outlined" />
           <v-text-field v-model="moduleState.roomForm.floorNumber" label="Tầng" type="number" min="1" variant="outlined" />
+          <v-text-field v-model="moduleState.roomForm.imageUrl" label="URL ảnh phòng" variant="outlined" />
+          <v-file-input label="Tải ảnh từ máy" accept="image/*" prepend-icon="mdi-image-plus" variant="outlined" @update:model-value="moduleState.setRoomImageFromFile(Array.isArray($event) ? ($event[0] ?? null) : $event)" />
         </v-card-text>
         <v-card-actions class="justify-end pa-4">
           <v-btn variant="text" @click="moduleState.roomDialog = false">Đóng</v-btn>

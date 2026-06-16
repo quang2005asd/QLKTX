@@ -19,6 +19,7 @@ export interface RoomTypeDto {
   typeName: string
   capacity: number
   basePrice: number
+  imageUrl?: string | null
   description?: string | null
   amenities: string[]
   createdAt: string
@@ -50,6 +51,7 @@ export interface RoomDto {
   roomTypeId: string
   roomNumber: string
   floorNumber: number
+  imageUrl?: string | null
   currentOccupancy: number
   availableSlots: number
   status: string
@@ -106,6 +108,7 @@ export interface RoomTypePayload {
   typeName: string
   capacity: number
   basePrice: number
+  imageUrl?: string | null
   description?: string | null
   amenities: string[]
 }
@@ -115,12 +118,14 @@ export interface RoomCreatePayload {
   roomTypeId: string
   roomNumber: string
   floorNumber: number
+  imageUrl?: string | null
 }
 
 export interface RoomUpdatePayload {
   roomTypeId: string
   roomNumber: string
   floorNumber: number
+  imageUrl?: string | null
 }
 
 export interface RoomStatusPayload {

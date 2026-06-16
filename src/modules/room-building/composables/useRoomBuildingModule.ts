@@ -71,6 +71,7 @@ const roomTypeForm = reactive({
   typeName: '',
   capacity: 4,
   basePrice: 0,
+  imageUrl: '',
   description: '',
   amenitiesText: '',
 })
@@ -80,6 +81,7 @@ const roomForm = reactive<RoomCreatePayload>({
   roomTypeId: '',
   roomNumber: '',
   floorNumber: 1,
+  imageUrl: '',
 })
 
 const roomStatusForm = reactive<RoomStatusPayload>({
@@ -324,6 +326,13 @@ function parseAmenities(text: string) {
     .filter(Boolean)
 }
 
+function getDefaultEquipmentsByRoomType(roomTypeId: string) {
+  const roomType = roomTypes.value.find((item) => item.id === roomTypeId)
+  if (!roomType) return []
+
+  return Array.from(new Set(roomType.amenities.map((item) => item.trim()).filter(Boolean)))
+}
+
 function resetBuildingForm() {
   buildingForm.name = ''
   buildingForm.totalFloors = 1
@@ -337,6 +346,7 @@ function resetRoomTypeForm() {
   roomTypeForm.typeName = ''
   roomTypeForm.capacity = 4
   roomTypeForm.basePrice = 0
+  roomTypeForm.imageUrl = ''
   roomTypeForm.description = ''
   roomTypeForm.amenitiesText = ''
   editingRoomTypeId.value = null
@@ -347,6 +357,7 @@ function resetRoomForm() {
   roomForm.roomTypeId = roomTypes.value[0]?.id ?? ''
   roomForm.roomNumber = ''
   roomForm.floorNumber = 1
+  roomForm.imageUrl = ''
   editingRoomId.value = null
 }
 
@@ -468,9 +479,21 @@ function openEditRoomTypeDialog(roomType: RoomTypeDto) {
   roomTypeForm.typeName = roomType.typeName
   roomTypeForm.capacity = roomType.capacity
   roomTypeForm.basePrice = roomType.basePrice
+  roomTypeForm.imageUrl = roomType.imageUrl ?? ''
   roomTypeForm.description = roomType.description ?? ''
   roomTypeForm.amenitiesText = roomType.amenities.join(', ')
   roomTypeDialog.value = true
+}
+
+async function setRoomTypeImageFromFile(file: File | null) {
+  if (!file) return
+
+  roomTypeForm.imageUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.onerror = () => reject(new Error('Không đọc được file ảnh loại phòng.'))
+    reader.readAsDataURL(file)
+  })
 }
 
 async function submitRoomType() {
@@ -479,6 +502,7 @@ async function submitRoomType() {
       typeName: roomTypeForm.typeName,
       capacity: Number(roomTypeForm.capacity),
       basePrice: Number(roomTypeForm.basePrice),
+      imageUrl: roomTypeForm.imageUrl || null,
       description: roomTypeForm.description || null,
       amenities: parseAmenities(roomTypeForm.amenitiesText),
     }
@@ -510,7 +534,19 @@ function openEditRoomDialog(room: RoomDto) {
   roomForm.roomTypeId = room.roomTypeId
   roomForm.roomNumber = room.roomNumber
   roomForm.floorNumber = room.floorNumber
+  roomForm.imageUrl = room.imageUrl ?? ''
   roomDialog.value = true
+}
+
+async function setRoomImageFromFile(file: File | null) {
+  if (!file) return
+
+  roomForm.imageUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.onerror = () => reject(new Error('Không đọc được file ảnh.'))
+    reader.readAsDataURL(file)
+  })
 }
 
 async function submitRoom() {
@@ -520,20 +556,34 @@ async function submitRoom() {
       roomTypeId: roomForm.roomTypeId,
       roomNumber: roomForm.roomNumber,
       floorNumber: Number(roomForm.floorNumber),
+      imageUrl: roomForm.imageUrl || null,
     }
     if (editingRoomId.value) {
       const updatePayload: RoomUpdatePayload = {
         roomTypeId: createPayload.roomTypeId,
         roomNumber: createPayload.roomNumber,
         floorNumber: createPayload.floorNumber,
+        imageUrl: createPayload.imageUrl,
       }
       await roomApi.updateRoom(editingRoomId.value, updatePayload)
     } else {
-      await roomApi.createRoom(createPayload)
+      const createdRoomResponse = await roomApi.createRoom(createPayload)
+      const defaultEquipments = getDefaultEquipmentsByRoomType(createPayload.roomTypeId)
+
+      if (defaultEquipments.length > 0) {
+        await Promise.all(
+          defaultEquipments.map((equipmentName) =>
+            equipmentApi.createEquipment({
+              roomId: createdRoomResponse.data.id,
+              equipmentName,
+            }),
+          ),
+        )
+      }
     }
     roomDialog.value = false
     resetRoomForm()
-  }, editingRoomId.value ? 'Đã cập nhật phòng.' : 'Đã tạo phòng.')
+  }, editingRoomId.value ? 'Đã cập nhật phòng.' : 'Đã tạo phòng và thêm thiết bị mặc định.')
 }
 
 function openRoomStatusEditor(room: RoomDto) {
@@ -796,10 +846,12 @@ export function useRoomBuildingModule() {
     openCreateRoomTypeDialog,
     openEditRoomTypeDialog,
     submitRoomType,
+    setRoomTypeImageFromFile,
     removeRoomType,
     openCreateRoomDialog,
     openEditRoomDialog,
     submitRoom,
+    setRoomImageFromFile,
     openRoomStatusEditor,
     submitRoomStatus,
     removeRoom,

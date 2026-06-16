@@ -29,6 +29,9 @@ onMounted(moduleState.ensureLoaded)
 
     <div class="room-type-grid">
       <article v-for="roomType in moduleState.pagedRoomTypes" :key="roomType.id" class="room-type-card">
+        <div v-if="roomType.imageUrl" class="room-type-thumb">
+          <img :src="roomType.imageUrl" :alt="roomType.typeName" class="room-type-thumb-image" />
+        </div>
         <div class="room-type-top">
           <div>
             <div class="room-type-name">{{ roomType.typeName }}</div>
@@ -56,6 +59,8 @@ onMounted(moduleState.ensureLoaded)
           <v-text-field v-model="moduleState.roomTypeForm.typeName" label="Tên loại phòng" variant="outlined" />
           <v-text-field v-model="moduleState.roomTypeForm.capacity" label="Sức chứa" type="number" min="1" variant="outlined" />
           <v-text-field v-model="moduleState.roomTypeForm.basePrice" label="Giá thuê / tháng" type="number" min="0" variant="outlined" />
+          <v-text-field v-model="moduleState.roomTypeForm.imageUrl" label="URL ảnh loại phòng" variant="outlined" />
+          <v-file-input label="Tải ảnh từ máy" accept="image/*" prepend-icon="mdi-image-plus" variant="outlined" @update:model-value="moduleState.setRoomTypeImageFromFile(Array.isArray($event) ? ($event[0] ?? null) : $event)" />
           <v-textarea v-model="moduleState.roomTypeForm.description" label="Mô tả" rows="3" variant="outlined" />
           <v-textarea v-model="moduleState.roomTypeForm.amenitiesText" label="Tiện nghi, cách nhau bởi dấu phẩy" rows="3" variant="outlined" />
         </v-card-text>

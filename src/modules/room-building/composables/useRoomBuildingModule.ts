@@ -21,7 +21,11 @@ import type {
   RoomUpdatePayload,
 } from '../types'
 
-const apiBaseUrl = resolveServiceBaseUrl(import.meta.env.VITE_ROOM_BUILDING_API_URL, 5285)
+const apiBaseUrl = resolveServiceBaseUrl(
+  import.meta.env.VITE_ROOM_BUILDING_API_URL,
+  5285,
+  import.meta.env.VITE_ROOM_BUILDING_PUBLIC_API_URL,
+)
 const modulePageSize = 6
 
 const loading = ref(false)

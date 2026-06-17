@@ -52,7 +52,11 @@ type IntroRoomTypeApi = {
   description?: string | null
 }
 
-const roomApiBaseUrl = resolveServiceBaseUrl(import.meta.env.VITE_ROOM_BUILDING_API_URL, 5285)
+const roomApiBaseUrl = resolveServiceBaseUrl(
+  import.meta.env.VITE_ROOM_BUILDING_API_URL,
+  5285,
+  import.meta.env.VITE_ROOM_BUILDING_PUBLIC_API_URL,
+)
 
 const fallbackRoomCards: IntroRoomCard[] = [
   {

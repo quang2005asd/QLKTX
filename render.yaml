@@ -9,7 +9,13 @@ services:
     envVars:
       - key: VITE_ROOM_BUILDING_API_URL
         sync: false
+      - key: VITE_ROOM_BUILDING_PUBLIC_API_URL
+        sync: false
       - key: VITE_STUDENT_CONTRACT_API_URL
         sync: false
+      - key: VITE_STUDENT_CONTRACT_PUBLIC_API_URL
+        sync: false
       - key: VITE_BILLING_MAINTENANCE_API_URL
+        sync: false
+      - key: VITE_BILLING_MAINTENANCE_PUBLIC_API_URL
         sync: false

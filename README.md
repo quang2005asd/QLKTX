@@ -322,6 +322,24 @@ VITE_STUDENT_CONTRACT_API_URL=https://your-student-contract-api
 VITE_BILLING_MAINTENANCE_API_URL=https://your-billing-api
 ```
 
+Neu frontend chay tren Render nhung backend van nam may local hoac duoc public bang URL rieng, giu nguyen bien LAN/IP cu va them bien public:
+
+```text
+VITE_ROOM_BUILDING_API_URL=http://192.168.x.x:5285
+VITE_ROOM_BUILDING_PUBLIC_API_URL=https://your-room-building-public-api
+
+VITE_STUDENT_CONTRACT_API_URL=http://192.168.x.x:5200
+VITE_STUDENT_CONTRACT_PUBLIC_API_URL=https://your-student-contract-public-api
+
+VITE_BILLING_MAINTENANCE_API_URL=http://192.168.x.x:5300
+VITE_BILLING_MAINTENANCE_PUBLIC_API_URL=https://your-billing-public-api
+```
+
+Quy uoc hien tai:
+
+- mo tren may trong mang noi bo -> uu tien `VITE_*_API_URL`
+- mo tren Render / host public -> uu tien `VITE_*_PUBLIC_API_URL`
+
 ### File da chuan bi san cho Render
 
 - `render.yaml`: cau hinh service static

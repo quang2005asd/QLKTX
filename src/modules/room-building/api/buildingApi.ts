@@ -2,7 +2,11 @@ import { http } from '@/core/api/http'
 import { resolveServiceBaseUrl } from '@/core/api/serviceBaseUrl'
 import type { BuildingCreatePayload, BuildingDto, BuildingUpdatePayload } from '../types'
 
-const baseUrl = resolveServiceBaseUrl(import.meta.env.VITE_ROOM_BUILDING_API_URL, 5285)
+const baseUrl = resolveServiceBaseUrl(
+  import.meta.env.VITE_ROOM_BUILDING_API_URL,
+  5285,
+  import.meta.env.VITE_ROOM_BUILDING_PUBLIC_API_URL,
+)
 
 export const buildingApi = {
   getBuildings() {

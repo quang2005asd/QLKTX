@@ -58,6 +58,10 @@ const roomApiBaseUrl = resolveServiceBaseUrl(
   import.meta.env.VITE_ROOM_BUILDING_PUBLIC_API_URL,
 )
 
+const roomApiHeaders = roomApiBaseUrl.includes('ngrok-free.dev') || roomApiBaseUrl.includes('ngrok-free.app')
+  ? { 'ngrok-skip-browser-warning': 'true' }
+  : undefined
+
 const fallbackRoomCards: IntroRoomCard[] = [
   {
     id: 'fallback-standard',
@@ -123,7 +127,9 @@ function getFallbackRoomImage(index: number) {
 
 async function loadRoomShowcase() {
   try {
-    const response = await fetch(`${roomApiBaseUrl}/api/roomtypes`)
+    const response = await fetch(`${roomApiBaseUrl}/api/roomtypes`, {
+      headers: roomApiHeaders,
+    })
     if (!response.ok) throw new Error('Không tải được danh sách loại phòng')
 
     const roomTypes = (await response.json()) as IntroRoomTypeApi[]

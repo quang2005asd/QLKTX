@@ -5,6 +5,18 @@ const baseUrl = resolveServiceBaseUrl(import.meta.env.VITE_BILLING_MAINTENANCE_A
 
 export const maintenanceApi = {
   getRequests() {
-    return http.get(`${baseUrl}/api/maintenance-requests`)
+    return http.get(`${baseUrl}/api/maintenance`)
+  },
+  getMyRequests() {
+    return http.get(`${baseUrl}/api/maintenance/my`)
+  },
+  submitRequest(data: any) {
+    return http.post(`${baseUrl}/api/maintenance`, data)
+  },
+  updateRequestStatus(id: number | string, data: any) {
+    return http.put(`${baseUrl}/api/maintenance/${id}/status`, data)
+  },
+  getTechnicians() {
+    return http.get(`${baseUrl}/api/technicians`)
   },
 }

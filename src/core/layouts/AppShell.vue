@@ -8,12 +8,6 @@ const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 
-const navigationItems = [
-  { title: 'Tổng quan', to: '/app/overview', icon: 'mdi-view-dashboard-outline' },
-  { title: 'Sinh viên', to: '/app/student-contract', icon: 'mdi-account-school-outline' },
-  { title: 'Hóa đơn', to: '/app/billing-maintenance', icon: 'mdi-receipt-text-outline' },
-]
-
 const roomBuildingItems = [
   { title: 'Tổng quan', to: '/app/room-building/overview', icon: 'mdi-chart-box-outline' },
   { title: 'Tòa nhà', to: '/app/room-building/buildings', icon: 'mdi-office-building-cog-outline' },
@@ -22,10 +16,26 @@ const roomBuildingItems = [
   { title: 'Khả dụng', to: '/app/room-building/availability', icon: 'mdi-map-search-outline' },
 ]
 
+const visibleNavigationItems = computed(() => {
+  const role = auth.user?.role?.toLowerCase()
+  if (role === 'student') {
+    return [
+      { title: 'Tổng quan', to: '/app/overview', icon: 'mdi-view-dashboard-outline' },
+      { title: 'Hợp đồng', to: '/app/student-contract', icon: 'mdi-file-document-outline' },
+      { title: 'Hóa đơn & Bảo trì', to: '/app/billing-maintenance', icon: 'mdi-receipt-text-outline' },
+    ]
+  }
+  return [
+    { title: 'Tổng quan', to: '/app/overview', icon: 'mdi-view-dashboard-outline' },
+    { title: 'Sinh viên', to: '/app/student-contract', icon: 'mdi-account-school-outline' },
+    { title: 'Hóa đơn & Bảo trì', to: '/app/billing-maintenance', icon: 'mdi-receipt-text-outline' },
+  ]
+})
+
 const roleLabel = computed(() => {
   if (auth.user?.role === 'admin') return 'Quản trị viên'
   if (auth.user?.role === 'manager') return 'Quản lý'
-  return 'Người dùng'
+  return 'Sinh viên'
 })
 
 const isRoomBuildingOpen = computed(() => route.path.startsWith('/app/room-building'))
@@ -54,7 +64,7 @@ function handleLogout() {
           <div class="drawer-section-label">Điều hướng</div>
           <v-list nav density="comfortable" class="nav-list">
             <v-list-item
-              v-for="item in navigationItems"
+              v-for="item in visibleNavigationItems"
               :key="item.to"
               :to="item.to"
               :prepend-icon="item.icon"
@@ -65,7 +75,7 @@ function handleLogout() {
               </template>
             </v-list-item>
 
-            <v-list-group :value="isRoomBuildingOpen">
+            <v-list-group v-if="auth.user?.role?.toLowerCase() !== 'student'" :value="isRoomBuildingOpen">
               <template #activator="{ props }">
                 <v-list-item
                   v-bind="props"

@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/core/stores/authStore'
+import { http } from '@/core/api/http'
+import { resolveServiceBaseUrl } from '@/core/api/serviceBaseUrl'
 
 const router = useRouter()
 const auth = useAuthStore()
+
+const baseUrl = resolveServiceBaseUrl(import.meta.env.VITE_BILLING_MAINTENANCE_API_URL, 5300)
 
 type AccountMode = 'user' | 'admin'
 
@@ -13,30 +17,46 @@ const accountMode = reactive<{ value: AccountMode }>({
 })
 
 const form = reactive({
-  email: 'student@ktx.local',
+  email: 'student',
   password: '123456',
 })
 
+const errorMessage = ref('')
+const loading = ref(false)
+
 function setAccountMode(mode: AccountMode) {
   accountMode.value = mode
-  form.email = mode === 'admin' ? 'admin@ktx.local' : 'student@ktx.local'
-  form.password = '123456'
+  form.email = mode === 'admin' ? 'admin' : 'student'
+  form.password = mode === 'admin' ? 'admin123' : '123456'
 }
 
-function handleLogin() {
-  const isAdmin = accountMode.value === 'admin'
+async function handleLogin() {
+  errorMessage.value = ''
+  loading.value = true
+  try {
+    const response = await http.post(`${baseUrl}/api/auth/login`, {
+      username: form.email,
+      password: form.password,
+    })
 
-  auth.login({
-    token: 'demo-token',
-    user: {
-      id: isAdmin ? 'demo-admin' : 'demo-user',
-      fullName: isAdmin ? 'Quản trị viên KTX' : 'Người dùng KTX',
-      email: form.email,
-      role: isAdmin ? 'admin' : 'student',
-    },
-  })
+    const data = response.data
+    auth.login({
+      token: data.token,
+      user: {
+        id: String(data.user.id),
+        fullName: data.user.fullName,
+        email: data.user.email,
+        role: data.user.role.toLowerCase() as any,
+      },
+    })
 
-  router.push('/app/overview')
+    router.push('/app/overview')
+  } catch (error: any) {
+    console.error(error)
+    errorMessage.value = error.response?.data || 'Đăng nhập thất bại. Tài khoản hoặc mật khẩu không chính xác.'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -60,7 +80,7 @@ function handleLogin() {
                     type="button"
                     @click="setAccountMode('user')"
                   >
-                    Người dùng
+                    Người dùng (Sinh viên)
                   </button>
                   <button
                     :class="['account-switch__item', { 'account-switch__item--active': accountMode.value === 'admin' }]"
@@ -71,8 +91,19 @@ function handleLogin() {
                   </button>
                 </div>
 
+                <v-alert
+                  v-if="errorMessage"
+                  type="error"
+                  variant="tonal"
+                  class="mb-4"
+                  closable
+                  @click:close="errorMessage = ''"
+                >
+                  {{ errorMessage }}
+                </v-alert>
+
                 <v-form @submit.prevent="handleLogin">
-                  <v-text-field v-model="form.email" class="mb-3" label="Email" variant="outlined" />
+                  <v-text-field v-model="form.email" class="mb-3" label="Tài khoản hoặc Email" variant="outlined" />
                   <v-text-field
                     v-model="form.password"
                     class="mb-4"
@@ -81,7 +112,7 @@ function handleLogin() {
                     variant="outlined"
                   />
 
-                  <v-btn block color="primary" size="large" type="submit">Đăng nhập</v-btn>
+                  <v-btn block color="primary" size="large" type="submit" :loading="loading">Đăng nhập</v-btn>
                 </v-form>
 
                 <div class="text-body-2 mt-4">
@@ -119,6 +150,7 @@ function handleLogin() {
   background: #fff;
   color: #5c5467;
   font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.25s ease;
 }

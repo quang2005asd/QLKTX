@@ -3,20 +3,20 @@ import { resolveServiceBaseUrl } from '@/core/api/serviceBaseUrl'
 
 const baseUrl = resolveServiceBaseUrl(import.meta.env.VITE_BILLING_MAINTENANCE_API_URL, 5300)
 
-export const studentApi = {
-  getStudents() {
+export const usersApi = {
+  getUsers() {
     return http.get(`${baseUrl}/api/users`)
   },
-  getStudent(id: number | string) {
+  getUser(id: number | string) {
     return http.get(`${baseUrl}/api/users/${id}`)
   },
-  createStudent(data: any) {
+  createUser(data: any) {
     return http.post(`${baseUrl}/api/users`, data)
   },
-  updateStudent(id: number | string, data: any) {
+  updateUser(id: number | string, data: any) {
     return http.put(`${baseUrl}/api/users/${id}`, data)
   },
-  deleteStudent(id: number | string) {
+  deleteUser(id: number | string) {
     return http.delete(`${baseUrl}/api/users/${id}`)
   },
 }

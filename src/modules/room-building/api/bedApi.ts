@@ -1,11 +1,11 @@
 import { http } from '@/core/api/http'
-import { resolveServiceBaseUrl } from '@/core/api/serviceBaseUrl'
+import { resolveServiceBaseUrlWithProductionFallback } from '@/core/api/serviceBaseUrl'
 import type { BedCreatePayload, BedDto, BedUpdatePayload } from '../types'
 
-const baseUrl = resolveServiceBaseUrl(
+const baseUrl = resolveServiceBaseUrlWithProductionFallback(
   import.meta.env.VITE_ROOM_BUILDING_API_URL,
   5285,
-  import.meta.env.VITE_ROOM_BUILDING_PUBLIC_API_URL,
+  'https://roombuildingservice-1ijx.onrender.com',
 )
 
 export const bedApi = {

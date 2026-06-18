@@ -1,6 +1,6 @@
 import { computed, reactive, ref, watch } from 'vue'
 import axios from 'axios'
-import { resolveServiceBaseUrl } from '@/core/api/serviceBaseUrl'
+import { resolveServiceBaseUrlWithProductionFallback } from '@/core/api/serviceBaseUrl'
 import { bedApi } from '../api/bedApi'
 import { buildingApi } from '../api/buildingApi'
 import { equipmentApi } from '../api/equipmentApi'
@@ -21,10 +21,10 @@ import type {
   RoomUpdatePayload,
 } from '../types'
 
-const apiBaseUrl = resolveServiceBaseUrl(
+const apiBaseUrl = resolveServiceBaseUrlWithProductionFallback(
   import.meta.env.VITE_ROOM_BUILDING_API_URL,
   5285,
-  import.meta.env.VITE_ROOM_BUILDING_PUBLIC_API_URL,
+  'https://roombuildingservice-1ijx.onrender.com',
 )
 const modulePageSize = 6
 

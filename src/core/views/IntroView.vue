@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { resolveServiceBaseUrl } from '@/core/api/serviceBaseUrl'
+import { resolveServiceBaseUrlWithProductionFallback } from '@/core/api/serviceBaseUrl'
 
 const branding = {
   schoolName: 'Đại Nam',
@@ -52,15 +52,11 @@ type IntroRoomTypeApi = {
   description?: string | null
 }
 
-const roomApiBaseUrl = resolveServiceBaseUrl(
+const roomApiBaseUrl = resolveServiceBaseUrlWithProductionFallback(
   import.meta.env.VITE_ROOM_BUILDING_API_URL,
   5285,
-  import.meta.env.VITE_ROOM_BUILDING_PUBLIC_API_URL,
+  'https://roombuildingservice-1ijx.onrender.com',
 )
-
-const roomApiHeaders = roomApiBaseUrl.includes('ngrok-free.dev') || roomApiBaseUrl.includes('ngrok-free.app')
-  ? { 'ngrok-skip-browser-warning': 'true' }
-  : undefined
 
 const fallbackRoomCards: IntroRoomCard[] = [
   {
@@ -128,7 +124,6 @@ function getFallbackRoomImage(index: number) {
 async function loadRoomShowcase() {
   try {
     const response = await fetch(`${roomApiBaseUrl}/api/roomtypes`, {
-      headers: roomApiHeaders,
     })
     if (!response.ok) throw new Error('Không tải được danh sách loại phòng')
 

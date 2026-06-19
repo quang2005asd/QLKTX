@@ -25,6 +25,12 @@ const visibleNavigationItems = computed(() => {
       { title: 'Hóa đơn & Bảo trì', to: '/app/billing-maintenance', icon: 'mdi-receipt-text-outline' },
     ]
   }
+  if (role === 'maintenancestaff' || role === 'technician') {
+    return [
+      { title: 'Tổng quan', to: '/app/overview', icon: 'mdi-view-dashboard-outline' },
+      { title: 'Hóa đơn & Bảo trì', to: '/app/billing-maintenance', icon: 'mdi-receipt-text-outline' },
+    ]
+  }
   return [
     { title: 'Tổng quan', to: '/app/overview', icon: 'mdi-view-dashboard-outline' },
     { title: 'Sinh viên', to: '/app/student-contract', icon: 'mdi-account-school-outline' },
@@ -33,8 +39,11 @@ const visibleNavigationItems = computed(() => {
 })
 
 const roleLabel = computed(() => {
-  if (auth.user?.role === 'admin') return 'Quản trị viên'
-  if (auth.user?.role === 'manager') return 'Quản lý'
+  const role = auth.user?.role?.toLowerCase()
+  if (role === 'admin') return 'Quản trị viên'
+  if (role === 'manager') return 'Quản lý'
+  if (role === 'staff') return 'Nhân viên kế toán'
+  if (role === 'maintenancestaff' || role === 'technician') return 'Nhân viên kỹ thuật'
   return 'Sinh viên'
 })
 
@@ -75,7 +84,7 @@ function handleLogout() {
               </template>
             </v-list-item>
 
-            <v-list-group v-if="auth.user?.role?.toLowerCase() !== 'student'" :value="isRoomBuildingOpen">
+            <v-list-group v-if="auth.user?.role?.toLowerCase() === 'admin' || auth.user?.role?.toLowerCase() === 'manager'" :value="isRoomBuildingOpen">
               <template #activator="{ props }">
                 <v-list-item
                   v-bind="props"

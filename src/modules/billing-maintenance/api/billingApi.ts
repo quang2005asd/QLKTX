@@ -1,34 +1,43 @@
-import { http } from '@/core/api/http'
-import { resolveServiceBaseUrl } from '@/core/api/serviceBaseUrl'
-
-const baseUrl = resolveServiceBaseUrl(import.meta.env.VITE_BILLING_MAINTENANCE_API_URL, 5300)
+import { http } from '@/shared/http'
 
 export const billingApi = {
   getInvoices() {
-    return http.get(`${baseUrl}/api/invoices`)
+    return http.get('/api/invoices')
   },
   getMyInvoices() {
-    return http.get(`${baseUrl}/api/invoices/my`)
+    return http.get('/api/invoices/my')
   },
   getInvoice(id: number | string) {
-    return http.get(`${baseUrl}/api/invoices/${id}`)
+    return http.get(`/api/invoices/${id}`)
   },
   createInvoice(data: any) {
-    return http.post(`${baseUrl}/api/invoices`, data)
+    return http.post('/api/invoices', data)
   },
   updateInvoice(id: number | string, data: any) {
-    return http.put(`${baseUrl}/api/invoices/${id}`, data)
+    return http.put(`/api/invoices/${id}`, data)
   },
   deleteInvoice(id: number | string) {
-    return http.delete(`${baseUrl}/api/invoices/${id}`)
+    return http.delete(`/api/invoices/${id}`)
   },
   processPayment(data: any) {
-    return http.post(`${baseUrl}/api/payments`, data)
+    return http.post('/api/payments', data)
   },
   getPayments() {
-    return http.get(`${baseUrl}/api/payments`)
+    return http.get('/api/payments')
   },
   getMyPayments() {
-    return http.get(`${baseUrl}/api/payments/my`)
+    return http.get('/api/payments/my')
+  },
+  getDebts() {
+    return http.get('/api/debts')
+  },
+  getStudentDebt(studentId: number | string) {
+    return http.get(`/api/debts/student/${studentId}`)
+  },
+  getDebtStats() {
+    return http.get('/api/debts/stats')
+  },
+  verifyPayment(data: { paymentId: number; isVerified: boolean; remarks?: string }) {
+    return http.post('/api/payments/verify', data)
   },
 }

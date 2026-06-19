@@ -14,6 +14,8 @@ const invoices = ref<any[]>([])
 const maintenanceRequests = ref<any[]>([])
 const users = ref<any[]>([])
 const payments = ref<any[]>([])
+const debtsList = ref<any[]>([])
+const debtStats = ref<any>({ totalOutstandingDebt: 0, totalInvoicedAmount: 0, totalCollectedAmount: 0, unpaidInvoiceCount: 0, overdueInvoiceCount: 0, debtPercentage: 0 })
 
 // Loading states
 const loading = ref(false)
@@ -89,18 +91,22 @@ async function loadData() {
   loading.value = true
   errorMessage.value = ''
   try {
-    const [invRes, maintRes, userRes, payRes, techRes] = await Promise.all([
+    const [invRes, maintRes, userRes, payRes, techRes, debtRes, statsRes] = await Promise.all([
       billingApi.getInvoices(),
       maintenanceApi.getRequests(),
       usersApi.getUsers(),
       billingApi.getPayments(),
       maintenanceApi.getTechnicians(),
+      billingApi.getDebts(),
+      billingApi.getDebtStats(),
     ])
-    invoices.value = invRes.data
-    maintenanceRequests.value = maintRes.data
+    invoices.value = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.items || [])
+    maintenanceRequests.value = Array.isArray(maintRes.data) ? maintRes.data : (maintRes.data?.items || [])
     users.value = userRes.data
     payments.value = payRes.data
     technicians.value = techRes.data
+    debtsList.value = debtRes.data
+    debtStats.value = statsRes.data
   } catch (err: any) {
     console.error(err)
     errorMessage.value = 'Không thể tải dữ liệu từ máy chủ.'
@@ -377,6 +383,23 @@ async function saveMaintenance() {
   }
 }
 
+async function verifyPaymentTransaction(paymentId: number, isVerified: boolean) {
+  submitting.value = true
+  try {
+    await billingApi.verifyPayment({
+      paymentId,
+      isVerified,
+      remarks: isVerified ? 'Duyệt thanh toán thành công' : 'Từ chối giao dịch'
+    })
+    successMessage.value = isVerified ? 'Đã duyệt thanh toán thành công!' : 'Đã từ chối giao dịch thanh toán!'
+    await loadData()
+  } catch (err: any) {
+    alert(err.response?.data || 'Có lỗi xảy ra khi xác minh thanh toán.')
+  } finally {
+    submitting.value = false
+  }
+}
+
 const studentUsers = computed(() => {
   return users.value.filter(u => u.role.toLowerCase() === 'student')
 })
@@ -391,6 +414,7 @@ const studentUsers = computed(() => {
       <v-tab value="maintenance" prepend-icon="mdi-wrench">Bảo trì</v-tab>
       <v-tab value="accounts" prepend-icon="mdi-account-multiple">Tài khoản</v-tab>
       <v-tab value="payments" prepend-icon="mdi-credit-card-check">Giám sát thanh toán</v-tab>
+      <v-tab value="debts" prepend-icon="mdi-cash-register">Công nợ</v-tab>
     </v-tabs>
 
     <v-alert
@@ -741,6 +765,7 @@ const studentUsers = computed(() => {
             <th>Phương thức</th>
             <th>Ngày giao dịch</th>
             <th>Trạng thái</th>
+            <th class="text-right">Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -760,9 +785,114 @@ const studentUsers = computed(() => {
                 {{ pay.status }}
               </v-chip>
             </td>
+            <td class="text-right">
+              <v-btn
+                v-if="pay.status === 'Pending'"
+                size="small"
+                color="success"
+                rounded="lg"
+                variant="tonal"
+                @click="verifyPaymentTransaction(pay.id, true)"
+                :loading="submitting"
+              >
+                Duyệt
+              </v-btn>
+              <v-btn
+                v-if="pay.status === 'Pending'"
+                size="small"
+                color="error"
+                rounded="lg"
+                variant="text"
+                class="ml-1"
+                @click="verifyPaymentTransaction(pay.id, false)"
+                :loading="submitting"
+              >
+                Từ chối
+              </v-btn>
+              <span v-else class="text-caption text-medium-emphasis">-</span>
+            </td>
           </tr>
           <tr v-if="payments.length === 0">
             <td colspan="7" class="text-center text-medium-emphasis py-4">Chưa có giao dịch thanh toán nào được ghi nhận</td>
+          </tr>
+        </tbody>
+      </v-table>
+    </div>
+
+    <!-- DEBT MANAGEMENT VIEW -->
+    <div v-if="activeTab === 'debts'">
+      <h2 class="text-h5 font-weight-bold mb-4">Quản lý Công nợ Sinh viên</h2>
+
+      <v-row class="mb-6" v-if="debtStats">
+        <v-col cols="12" sm="4">
+          <v-card class="stat-card border" elevation="0">
+            <v-card-text>
+              <div class="stat-title text-medium-emphasis">Tổng nợ chưa thu</div>
+              <div class="stat-number text-h5 font-weight-bold text-error">{{ formatCurrency(debtStats.totalOutstandingDebt) }}</div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+        <v-col cols="12" sm="4">
+          <v-card class="stat-card border" elevation="0">
+            <v-card-text>
+              <div class="stat-title text-medium-emphasis">Tỷ lệ công nợ</div>
+              <div class="stat-number text-h5 font-weight-bold text-warning">{{ debtStats.debtPercentage }}%</div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+        <v-col cols="12" sm="4">
+          <v-card class="stat-card border" elevation="0">
+            <v-card-text>
+              <div class="stat-title text-medium-emphasis">Hóa đơn quá hạn</div>
+              <div class="stat-number text-h5 font-weight-bold text-error">{{ debtStats.overdueInvoiceCount }} hóa đơn</div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <v-table class="border rounded-lg">
+        <thead>
+          <tr>
+            <th>Sinh viên</th>
+            <th>Email</th>
+            <th>Tổng tiền đã lập</th>
+            <th>Tổng tiền đã đóng</th>
+            <th>Còn nợ</th>
+            <th>Số hóa đơn chưa đóng</th>
+            <th class="text-right">Chi tiết nợ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="debt in debtsList" :key="debt.userId">
+            <td>{{ debt.fullName }} ({{ debt.username }})</td>
+            <td>{{ debt.email }}</td>
+            <td>{{ formatCurrency(debt.totalInvoiceAmount) }}</td>
+            <td class="text-success font-weight-bold">{{ formatCurrency(debt.totalPaidAmount) }}</td>
+            <td class="text-error font-weight-bold">{{ formatCurrency(debt.remainingDebt) }}</td>
+            <td>
+              <v-chip size="small" :color="debt.unpaidInvoices.length > 0 ? 'warning' : 'success'" variant="flat">
+                {{ debt.unpaidInvoices.length }} hóa đơn
+              </v-chip>
+            </td>
+            <td class="text-right">
+              <v-menu location="bottom end">
+                <template #activator="{ props }">
+                  <v-btn size="small" rounded="lg" color="primary" variant="tonal" v-bind="props" :disabled="debt.unpaidInvoices.length === 0">
+                    Xem hóa đơn nợ
+                  </v-btn>
+                </template>
+                <v-list class="pa-2 border" max-width="350">
+                  <v-list-item v-for="inv in debt.unpaidInvoices" :key="inv.id" class="mb-2 border-b pb-2">
+                    <div class="font-weight-bold text-subtitle-2">{{ inv.title }}</div>
+                    <div class="text-caption text-error font-weight-bold">Nợ: {{ formatCurrency(inv.amount) }}</div>
+                    <div class="text-caption text-medium-emphasis">Hạn chót: {{ formatDate(inv.dueDate) }}</div>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </td>
+          </tr>
+          <tr v-if="debtsList.length === 0">
+            <td colspan="7" class="text-center text-medium-emphasis py-4">Không có dữ liệu công nợ</td>
           </tr>
         </tbody>
       </v-table>

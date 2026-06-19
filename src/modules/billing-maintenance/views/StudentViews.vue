@@ -45,8 +45,8 @@ async function loadData() {
       maintenanceApi.getMyRequests(),
       billingApi.getMyPayments(),
     ])
-    invoices.value = invRes.data
-    maintenanceRequests.value = maintRes.data
+    invoices.value = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.items || [])
+    maintenanceRequests.value = Array.isArray(maintRes.data) ? maintRes.data : (maintRes.data?.items || [])
     payments.value = payRes.data
   } catch (err: any) {
     console.error(err)
@@ -85,7 +85,7 @@ async function executePayment() {
       amount: selectedInvoice.value.amount,
       paymentMethod: selectedPaymentMethod.value,
       transactionId: mockTransactionId.value,
-      status: 'Success',
+      status: selectedPaymentMethod.value === 'Cash' ? 'Success' : 'Pending',
     }
 
     await billingApi.processPayment(payload)
@@ -141,9 +141,13 @@ const filteredInvoices = computed(() => {
 
 const statusMap: Record<string, string> = {
   'Pending': 'Chờ xử lý',
+  'NEW': 'Chờ xử lý',
   'In Progress': 'Đang xử lý',
+  'IN_PROGRESS': 'Đang xử lý',
   'Completed': 'Hoàn thành',
-  'Rejected': 'Từ chối'
+  'COMPLETED': 'Hoàn thành',
+  'Rejected': 'Từ chối',
+  'CANCELLED': 'Đã hủy'
 }
 
 function getStatusLabel(status: string) {
@@ -272,7 +276,7 @@ function getStatusLabel(status: string) {
                 </div>
                 <v-chip
                   size="small"
-                  :color="req.status === 'Completed' ? 'success' : req.status === 'Pending' ? 'warning' : req.status === 'In Progress' ? 'info' : 'error'"
+                  :color="req.status === 'Completed' || req.status === 'COMPLETED' ? 'success' : (req.status === 'Pending' || req.status === 'NEW' ? 'warning' : (req.status === 'In Progress' || req.status === 'IN_PROGRESS' ? 'info' : 'error'))"
                   variant="flat"
                 >
                   {{ getStatusLabel(req.status) }}

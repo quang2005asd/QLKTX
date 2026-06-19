@@ -25,7 +25,7 @@ async function handleRegister() {
   successMessage.value = ''
   loading.value = true
   try {
-    await http.post(`${baseUrl}/api/auth/register`, {
+    await http.post('/api/auth/register', {
       username: form.username || form.email.split('@')[0],
       email: form.email,
       password: form.password,
